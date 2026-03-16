@@ -1,0 +1,22 @@
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 20px;
+}
+
+.kpi-card {
+  padding: 25px;
+  border-radius: 14px;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.kpi-1 { background: linear-gradient(135deg, #667eea, #764ba2); }
+.kpi-2 { background: linear-gradient(135deg, #43cea2, #185a9d); }
+.kpi-3 { background: linear-gradient(135deg, #f7971e, #ffd200); }
+
+.kpi-title { font-size: 15px; opacity: 0.9; }
+.kpi-value { font-size: 30px; font-weight: bold; margin-top: 10px; }
+
+

@@ -1,0 +1,17 @@
+.insights-grid{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:16px;
+  padding:20px;
+}
+
+.kpi-card{
+  border-radius:14px;
+  padding:20px;
+  color:#fff;
+  font-weight:bold;
+}
+
+.kpi-1{ background:linear-gradient(135deg,#6a5acd,#00bfff); }
+.kpi-2{ background:linear-gradient(135deg,#ff6b6b,#ffa502); }
+.kpi-3{ background:linear-gradient(135deg,#2ecc71,#00d2ff); }

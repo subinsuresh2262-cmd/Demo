@@ -1,0 +1,23 @@
+{
+ "content": null,
+ "creation": "2026-02-04 12:41:58.795544",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2026-02-04 12:41:58.795544",
+ "modified_by": "Administrator",
+ "module": "Demo",
+ "name": "insights-dashboard",
+ "owner": "Administrator",
+ "page_name": "insights-dashboard",
+ "roles": [
+  {
+   "role": "System Manager"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Insights Dashboard"
+}
