@@ -95,29 +95,30 @@ def get_data(filters):
     where_clause = " AND ".join(conditions)
 
     rows = frappe.db.sql(
-        f"""
-        SELECT
-            gle.posting_date,
-            gle.voucher_type,
-            gle.voucher_no,
-            gle.party,
-            COALESCE(gle.remarks, '') AS description,
-            CASE
-                WHEN gle.voucher_type = 'Sales Invoice' THEN COALESCE(si.po_no, '')
-                ELSE ''
-            END AS po_no,
-            gle.debit_in_account_currency AS debit,
-            gle.credit_in_account_currency AS credit
-        FROM `tabGL Entry` gle
-        LEFT JOIN `tabSales Invoice` si
-            ON si.name = gle.voucher_no
-        WHERE {where_clause}
-        ORDER BY gle.posting_date ASC, gle.creation ASC, gle.name ASC
-        """,
-        values,
-        as_dict=1,
-    )
-
+    f"""
+    SELECT
+        gle.posting_date,
+        gle.voucher_type,
+        gle.voucher_no,
+        gle.party,
+        COALESCE(gle.remarks, '') AS description,
+        CASE
+            WHEN gle.voucher_type = 'Sales Invoice' THEN COALESCE(si.po_no, '')
+            ELSE ''
+        END AS po_no,
+        gle.debit_in_account_currency AS debit,
+        gle.credit_in_account_currency AS credit
+    FROM `tabGL Entry` gle
+    LEFT JOIN `tabSales Invoice` si
+        ON si.name = gle.voucher_no
+    WHERE {where_clause}
+    AND gle.voucher_type = 'Sales Invoice'
+    AND IFNULL(si.outstanding_amount,0) > 0
+    ORDER BY gle.posting_date ASC, gle.creation ASC, gle.name ASC
+    """,
+    values,
+    as_dict=1,
+)
     balance = 0
     data = []
 
