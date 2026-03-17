@@ -46,7 +46,6 @@ def get_data(filters):
 
     where_clause = " AND ".join(conditions)
 
-    # SQL query to get GL Entries with proper outstanding logic
     rows = frappe.db.sql(
         f"""
         SELECT
@@ -55,46 +54,58 @@ def get_data(filters):
             gle.voucher_no,
             gle.party,
             COALESCE(gle.remarks, '') AS description,
+
             CASE
                 WHEN gle.voucher_type = 'Sales Invoice' THEN COALESCE(si.po_no, '')
                 ELSE ''
             END AS po_no,
+
             CASE
                 WHEN gle.voucher_type = 'Sales Invoice' THEN si.outstanding_amount
                 ELSE gle.debit_in_account_currency
             END AS debit,
+
             CASE
                 WHEN gle.voucher_type = 'Sales Invoice' THEN 0
                 WHEN gle.voucher_type = 'Payment Entry' THEN
-                    gle.credit_in_account_currency - IFNULL((
-                        SELECT SUM(ref.allocated_amount)
-                        FROM `tabPayment Entry Reference` ref
-                        WHERE ref.parent = gle.voucher_no
-                          AND ref.parenttype = 'Payment Entry'
-                          AND ref.docstatus = 1
-                    ), 0)
+                    gle.credit_in_account_currency - IFNULL(per.allocated_amount, 0)
                 ELSE gle.credit_in_account_currency
             END AS credit
+
         FROM `tabGL Entry` gle
+
         LEFT JOIN `tabSales Invoice` si
             ON si.name = gle.voucher_no
             AND si.docstatus = 1
+
+        LEFT JOIN (
+            SELECT
+                parent,
+                SUM(allocated_amount) AS allocated_amount
+            FROM `tabPayment Entry Reference`
+            WHERE parenttype = 'Payment Entry'
+              AND docstatus = 1
+            GROUP BY parent
+        ) per ON per.parent = gle.voucher_no
+
         WHERE {where_clause}
+
         AND (
-            (gle.voucher_type = 'Sales Invoice' AND COALESCE(si.outstanding_amount, 0) > 0)
-            OR (gle.voucher_type != 'Sales Invoice' AND 
-                (gle.voucher_type != 'Payment Entry' OR 
-                 gle.against_voucher IS NULL OR 
-                 gle.credit_in_account_currency - IFNULL((
-                     SELECT SUM(ref.allocated_amount)
-                     FROM `tabPayment Entry Reference` ref
-                     WHERE ref.parent = gle.voucher_no
-                       AND ref.parenttype = 'Payment Entry'
-                       AND ref.docstatus = 1
-                 ), 0) > 0
+            -- Only outstanding invoices
+            (gle.voucher_type = 'Sales Invoice'
+                AND COALESCE(si.outstanding_amount, 0) > 0)
+
+            OR
+
+            -- Other entries
+            (gle.voucher_type != 'Sales Invoice'
+                AND (
+                    gle.voucher_type != 'Payment Entry'
+                    OR (gle.credit_in_account_currency - IFNULL(per.allocated_amount, 0)) > 0
                 )
             )
         )
+
         ORDER BY gle.posting_date ASC, gle.creation ASC, gle.name ASC
         """,
         values,
@@ -103,6 +114,7 @@ def get_data(filters):
 
     balance = 0
     data = []
+
     for row in rows:
         debit = flt(row.debit)
         credit = flt(row.credit)
@@ -289,7 +301,7 @@ def get_customer_primary_address(customer_doc):
         address.get("address_line1"),
         address.get("address_line2"),
         address.get("city"),
-        address.get("state"),
+        address.get("state"),   
         address.get("country"),
         address.get("pincode"),
     ]
